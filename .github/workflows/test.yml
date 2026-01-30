@@ -1,0 +1,51 @@
+name: Deploy Flask App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            set -e
+
+            # Install required tools (safe even if already installed)
+            sudo yum install -y git python3-pip
+
+            cd /home/ec2-user
+
+            # Clone repo first time, otherwise pull latest code
+            if [ ! -d "python_flask-project" ]; then
+              git clone https://github.com/mahimapatel93/python_flask-project.git
+            fi
+
+            cd python_flask-project
+            git pull origin main
+
+            # Install Python dependencies
+            sudo pip3 install -r requirements.txt
+
+            # Stop old Flask app if running
+            # pkill -f app.py || true
+
+            # Start Flask app in background
+            nohup python3 app.py > flask.log 2>&1 &
+
+            echo "Deployment Finished ✅"
