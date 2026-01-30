@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "🚀 Flask app deployed and  successfully updated and deployed via GitHub Actions! Enjoy the new version."
+    return "🚀 Flask app  successfully updated and deployed via GitHub Actions! "
 
 
 
